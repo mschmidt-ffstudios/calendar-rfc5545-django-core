@@ -1,0 +1,103 @@
+@startuml WebDAV_Integration
+
+package "WebDAV - RFC 4918 / 4791" {
+
+  class WebDAVResource {
+    +id: UUID
+    +path: String
+    +created_at: DateTime
+    +updated_at: DateTime
+    +owner: User
+    +is_collection: Boolean
+    +etag: Text
+    +depth: Enum { 0, 1, infinity }
+  }
+
+  class WebDAVLock {
+    +id: UUID
+    +resource: WebDAVResource
+    +lock_token: String
+    +user: User
+    +timeout: Duration
+    +expires_at: DateTime
+    +scope: Enum { exclusive, shared }
+    +type: Enum { write }
+  }
+
+  class WebDAVProperty {
+    +id: UUID
+    +resource: WebDAVResource
+    +namespace: String
+    +name: String
+    +value: Text
+    +scope: Enum { user, system }
+  }
+
+  class WebDAVPermission {
+    +id: UUID
+    +resource: WebDAVResource
+    +user: User
+    +permission: Enum { NONE, READ, WRITE, DELETE, SHARE, ADMIN }
+    +inherited: Boolean
+  }
+
+  class WebDAVQuota {
+    +id: UUID
+    +user: User
+    +resource: WebDAVResource
+    +quota_available_bytes: Integer
+    +quota_used_bytes: Integer
+  }
+
+  class WebDAVAuditLog {
+    +id: UUID
+    +user: User
+    +action: String
+    +resource_path: String
+    +timestamp: DateTime
+  }
+
+  class WebDAVSubscription {
+    +id: UUID
+    +user: User
+    +resource: WebDAVResource
+    +remote_url: URI
+    +status: Enum { ACTIVE, INACTIVE, FAILED }
+    +subscribed_at: DateTime
+  }
+
+  class WebDAVReport {
+    +id: UUID
+    +resource: WebDAVResource
+    +filter: String
+    +requested_by: User
+    +requested_at: DateTime
+  }
+
+  class WebDAVInbox {
+    +id: UUID
+    +user: User
+    +event: VEVENT
+    +type: Enum { INVITATION, RESPONSE, CANCELLATION }
+    +status: Enum { UNREAD, READ, PROCESSED }
+    +received_at: DateTime
+  }
+
+  WebDAVResource <|-- VEVENT
+  WebDAVResource <|-- VTODO
+  WebDAVResource <|-- VFREEBUSY
+  WebDAVResource <|-- VCALENDAR
+
+  WebDAVResource --> "*" WebDAVLock
+  WebDAVResource --> "*" WebDAVProperty
+  WebDAVResource --> "*" WebDAVPermission
+  WebDAVResource --> "*" WebDAVQuota
+  WebDAVResource --> "*" WebDAVAuditLog
+  WebDAVResource --> "*" WebDAVSubscription
+  WebDAVResource --> "*" WebDAVReport
+
+  VEVENT --> WebDAVInbox
+
+}
+
+@enduml

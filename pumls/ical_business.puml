@@ -1,0 +1,77 @@
+@startuml icalendar_logic
+!include ical_rfc5545.puml
+
+package "iCalendar Application Logic" {
+
+  interface ICalendarFactory {
+    +createCalendar(user: User, name: String): VCALENDAR
+    +importICal(data: String): VCALENDAR
+    +exportICal(calendar: VCALENDAR): String
+  }
+
+  class CalendarFactoryImpl {
+    +createCalendar(user: User, name: String): VCALENDAR
+    +importICal(data: String): VCALENDAR
+    +exportICal(calendar: VCALENDAR): String
+  }
+
+  interface IEventFactory {
+    +createEvent(calendar: VCALENDAR, data: Map): VEVENT
+    +duplicateEvent(event: VEVENT): VEVENT
+    +validateEvent(data: Map): Boolean
+  }
+
+  class EventFactoryImpl {
+    +createEvent(calendar: VCALENDAR, data: Map): VEVENT
+    +duplicateEvent(event: VEVENT): VEVENT
+    +validateEvent(data: Map): Boolean
+  }
+
+  interface IToDoFactory {
+    +createTask(calendar: VCALENDAR, data: Map): VTODO
+    +markComplete(task: VTODO): Boolean
+    +assignTask(task: VTODO, user: User): Boolean
+  }
+
+  class ToDoFactoryImpl {
+    +createTask(calendar: VCALENDAR, data: Map): VTODO
+    +markComplete(task: VTODO): Boolean
+    +assignTask(task: VTODO, user: User): Boolean
+  }
+
+  interface ICalendarService {
+    +syncCalendar(calendar: VCALENDAR): Boolean
+    +getEvents(calendar: VCALENDAR, range: DateRange): List<VEVENT>
+    +getTasks(calendar: VCALENDAR): List<VTODO>
+  }
+
+  class CalendarServiceImpl {
+    +syncCalendar(calendar: VCALENDAR): Boolean
+    +getEvents(calendar: VCALENDAR, range: DateRange): List<VEVENT>
+    +getTasks(calendar: VCALENDAR): List<VTODO>
+  }
+
+  interface IParticipationService {
+    +respond(event: VEVENT, user: User, partstat: Enum): Boolean
+    +delegate(event: VEVENT, from: User, to: User): Boolean
+  }
+
+  class ParticipationServiceImpl {
+    +respond(event: VEVENT, user: User, partstat: Enum): Boolean
+    +delegate(event: VEVENT, from: User, to: User): Boolean
+  }
+
+  ICalendarFactory <|.. CalendarFactoryImpl
+  IEventFactory <|.. EventFactoryImpl
+  IToDoFactory <|.. ToDoFactoryImpl
+  ICalendarService <|.. CalendarServiceImpl
+  IParticipationService <|.. ParticipationServiceImpl
+
+  CalendarFactoryImpl --> VCALENDAR
+  EventFactoryImpl --> VEVENT
+  ToDoFactoryImpl --> VTODO
+  CalendarServiceImpl --> VCALENDAR
+  ParticipationServiceImpl --> EventParticipation
+
+}
+@enduml

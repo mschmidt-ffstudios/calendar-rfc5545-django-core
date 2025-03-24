@@ -1,0 +1,122 @@
+@startuml calendar_api_views
+
+
+package "API Views & URL Routing" {
+
+  class AuthView
+  class UserView
+  class CalendarViewSet
+  class EventViewSet
+  class ReminderView
+  class InvitationView
+  class WorkspaceView
+  class FreeBusyView
+  class WebDAVResourceView
+
+  package "Controllers" {
+    class AuthController {
+      +login()
+      +logout()
+      +register()
+      +reset_password()
+      +confirm_reset()
+      +verify_email()
+    }
+
+    class UserController {
+      +get_profile()
+      +update_profile()
+      +partial_update_profile()
+      +change_email()
+    }
+
+    class CalendarController {
+      +list_calendars()
+      +create_calendar()
+      +get_calendar()
+      +update_calendar()
+      +patch_calendar()
+      +delete_calendar()
+      +export_ics()
+      +import_ics()
+      +report_events()
+      +share_calendar()
+      +revoke_share()
+    }
+
+    class EventController {
+      +list_events()
+      +create_event()
+      +get_event()
+      +update_event()
+      +patch_event()
+      +delete_event()
+      +copy_event()
+      +move_event()
+      +export_ics()
+      +report_event()
+      +upload_attachment()
+      +list_attachments()
+      +delete_attachment()
+      +get_participants()
+      +respond_participation()
+      +remove_participant()
+    }
+
+    class ReminderController {
+      +list_reminders()
+      +create_reminder()
+      +delete_reminder()
+    }
+
+    class InvitationController {
+      +list_invitations()
+    }
+
+    class WorkspaceController {
+      +sync_workspace()
+    }
+
+    class FreeBusyController {
+      +query_freebusy()
+    }
+
+    class WebDAVController {
+      +mkresource()
+      +sync()
+      +move()
+      +copy()
+      +proppatch()
+      +lock()
+      +unlock()
+      +report()
+    }
+  }
+
+  ' Connections: Views -> Controllers
+  AuthView --> AuthController
+  UserView --> UserController
+  CalendarViewSet --> CalendarController
+  EventViewSet --> EventController
+  ReminderView --> ReminderController
+  InvitationView --> InvitationController
+  WorkspaceView --> WorkspaceController
+  FreeBusyView --> FreeBusyController
+  WebDAVResourceView --> WebDAVController
+
+  ' Controller -> Logic Layer
+  CalendarController --> CalendarFactoryImpl
+  CalendarController --> CalendarServiceImpl
+  EventController --> EventFactoryImpl
+  EventController --> ParticipationServiceImpl
+  ReminderController --> VALARM
+  InvitationController --> EventParticipation
+  FreeBusyController --> VFREEBUSY
+  WorkspaceController --> Workspace
+  WebDAVController --> VEVENT
+  WebDAVController --> VTODO
+  WebDAVController --> VCALENDAR
+
+}
+
+@enduml

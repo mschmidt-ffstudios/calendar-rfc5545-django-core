@@ -1,0 +1,204 @@
+@startuml RFC5545_ICALENDAR
+
+package "iCalendar - RFC 5545" {
+
+  package "VCALENDAR" {
+    class VCALENDAR {
+      +PRODID: Text
+      +VERSION: Text
+      +CALSCALE: Text
+      +METHOD: Text
+      +owner: User
+    }
+  }
+
+package "VEVENT" {
+  class VEVENT {
+    +UID: Text
+    +SUMMARY: Text
+    +DESCRIPTION: Text
+    +DTSTART: DateTime
+    +DTEND: DateTime
+    +DTSTAMP: DateTime
+    +CREATED: DateTime
+    +SEQUENCE: Integer
+    +STATUS: Enum
+    +TRANSP: Enum
+    +CLASS: Enum
+    +EXDATE: Date[]
+    +RDATE: Date[]
+    +RRULE: Recur
+    +EXRULE: Recur
+    +ORGANIZER: URI
+    +LOCATION: Text
+    +CATEGORIES: Text[]
+    +RELATED_TO: UID
+    +RELTYPE: Enum  # {PARENT, CHILD, SIBLING}
+    +GEO: Geo
+    +URL: URI
+    +REQUEST_STATUS: Text
+    +owner: User
+    +TZID: Text
+    +ETAG: Text
+  }
+
+    class EventParticipation {
+      +UID: Text
+      +ATTENDEE: URI
+      +PARTSTAT: Enum
+      +RSVP: Boolean
+      +CN: Text
+      +ROLE: Enum
+      +CUTYPE: Enum
+      +DELEGATED_TO: URI
+      +DELEGATED_FROM: URI
+      +SENT_BY: URI
+    }
+
+    VEVENT --> "0..*" EventParticipation : has
+    VEVENT --> GeoLocation
+    VEVENT --> "*" Attachment
+    VEVENT --> "*" Category
+    VEVENT --> "0..*" VALARM
+    EventParticipation --> User
+
+}
+class GeoLocation {
+  + Float latitude
+  + Float longitude
+}
+  class Attachment {
+    +id: UUID
+    +type: Enum { URI, INLINE }
+    +mime_type: String
+    +uri: String
+    +data: Binary
+    +title: String
+  }
+  class Category {
+    +name: Text
+  }
+
+package "VTODO" {
+    class VTODO {
+      +UID: Text
+      +SUMMARY: Text
+      +DESCRIPTION: Text
+      +DTSTART: DateTime
+      +DUE: DateTime
+      +DURATION: Duration
+      +DTSTAMP: DateTime
+      +CREATED: DateTime
+      +LAST_MODIFIED: DateTime
+      +STATUS: Enum
+      +EXDATE: Date[]
+      +RDATE: Date[]
+      +PERCENT_COMPLETE: Integer
+      +PRIORITY: Integer
+      +RELATED_TO: UID
+      +ASSIGNEE: URI
+      +TZID: Text
+      +ETAG: Text
+    }
+
+    VTODO --> GeoLocation
+    VTODO --> "*" Attachment
+    VTODO --> "0..*" VALARM
+  }
+
+  package "VFREEBUSY" {
+    class VFREEBUSY {
+      +UID: Text
+      +DTSTART: DateTime
+      +DTEND: DateTime
+      +DTSTAMP: DateTime
+      +ORGANIZER: URI
+      +FREEBUSY: Period[]
+      +COMMENT: Text
+      +TZID: Text
+      +ETAG: Text
+      +owner: User 
+    }
+  }
+
+class Category {
+  +name: Text
+}
+  package "VTIMEZONE" {
+    class VTIMEZONE {
+      +TZID: Text
+      +LAST_MODIFIED: DateTime
+      +TZURL: URI
+    }
+
+    class STANDARD {
+      +DTSTART: DateTime
+      +TZOFFSETFROM: UTCOffset
+      +TZOFFSETTO: UTCOffset
+      +RRULE: Recur
+    }
+
+    class DAYLIGHT {
+      +DTSTART: DateTime
+      +TZOFFSETFROM: UTCOffset
+      +TZOFFSETTO: UTCOffset
+      +RRULE: Recur
+    }
+
+    VTIMEZONE --> STANDARD
+    VTIMEZONE --> DAYLIGHT
+  }
+
+  package "VALARM" {
+    class VALARM {
+      +ACTION: Enum
+      +TRIGGER: Duration | DateTime
+      +REPEAT: Integer
+      +DURATION: Duration
+      +DESCRIPTION: Text
+      +ATTACH_URI: URI
+      +ATTACH_DATA: Binary
+      +ATTACH_FMT: Text
+    }
+  }
+
+  class CalendarShare {
+  + calendar: VCALENDAR
+  + shared_with: User
+  + permission: Enum { VIEW, EDIT }
+}
+
+class Workspace {
+  +id: UUID
+  +name: String
+  +description: Text
+  +created_at: DateTime
+  +updated_at: DateTime
+  +owner: User
+}
+
+class CalendarPermission {
+  +calendar: VCALENDAR
+  +user: User
+  +permission: Enum { VIEW, EDIT, ADMIN }
+  +inherited: Boolean
+}
+VCALENDAR --> "0..*" CalendarPermission
+CalendarPermission --> User
+VCALENDAR --> "0..*" CalendarPermission
+VCALENDAR --> Workspace : in
+VCALENDAR --> "0..*" CalendarShare
+CalendarShare --> User : shared_with
+
+  VCALENDAR --> VEVENT
+  VCALENDAR --> VTODO
+  VCALENDAR --> VFREEBUSY
+  VCALENDAR --> VTIMEZONE
+  VEVENT --> VCALENDAR : belongs_to
+VTODO --> VCALENDAR : belongs_to
+VFREEBUSY --> VCALENDAR : belongs_to
+
+VCALENDAR --> Workspace
+VEVENT --> Workspace
+VTODO --> Workspace
+VFREEBUSY --> Workspace
