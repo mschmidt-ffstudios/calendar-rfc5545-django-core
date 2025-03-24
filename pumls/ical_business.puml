@@ -3,11 +3,11 @@
 
 package "iCalendar Application Logic" {
 
-  interface ICalendarFactory {
-    +createCalendar(user: User, name: String): VCALENDAR
-    +importICal(data: String): VCALENDAR
-    +exportICal(calendar: VCALENDAR): String
-  }
+interface ICalendarFactory {
+  +createCalendar(user: User, name: String): Result<VCALENDAR>
+  +importICal(data: String): Result<VCALENDAR>
+  +exportICal(calendar: VCALENDAR): Result<String>
+}
 
   class CalendarFactoryImpl {
     +createCalendar(user: User, name: String): VCALENDAR
@@ -15,23 +15,23 @@ package "iCalendar Application Logic" {
     +exportICal(calendar: VCALENDAR): String
   }
 
-  interface IEventFactory {
-    +createEvent(calendar: VCALENDAR, data: Map): VEVENT
-    +duplicateEvent(event: VEVENT): VEVENT
-    +validateEvent(data: Map): Boolean
-  }
+interface IEventFactory {
+  +createEvent(calendar: VCALENDAR, data: Map): Result<VEVENT>
+  +duplicateEvent(event: VEVENT, options: DuplicationOptions): Result<VEVENT>
+  +validateEvent(data: Map): Result<Boolean>
+}
 
-  class EventFactoryImpl {
-    +createEvent(calendar: VCALENDAR, data: Map): VEVENT
-    +duplicateEvent(event: VEVENT): VEVENT
-    +validateEvent(data: Map): Boolean
-  }
+class EventFactoryImpl {
+  +createEvent(calendar: VCALENDAR, data: Map): Result<VEVENT>
+  +duplicateEvent(event: VEVENT, options: DuplicationOptions): Result<VEVENT>
+  +validateEvent(data: Map): Result<Boolean>
+}
 
-  interface IToDoFactory {
-    +createTask(calendar: VCALENDAR, data: Map): VTODO
-    +markComplete(task: VTODO): Boolean
-    +assignTask(task: VTODO, user: User): Boolean
-  }
+interface IToDoFactory {
+  +createTask(calendar: VCALENDAR, data: Map): Result<VTODO>
+  +markComplete(task: VTODO): Result<Boolean>
+  +assignTask(task: VTODO, user: User): Result<Boolean>
+}
 
   class ToDoFactoryImpl {
     +createTask(calendar: VCALENDAR, data: Map): VTODO
@@ -39,11 +39,11 @@ package "iCalendar Application Logic" {
     +assignTask(task: VTODO, user: User): Boolean
   }
 
-  interface ICalendarService {
-    +syncCalendar(calendar: VCALENDAR): Boolean
-    +getEvents(calendar: VCALENDAR, range: DateRange): List<VEVENT>
-    +getTasks(calendar: VCALENDAR): List<VTODO>
-  }
+interface ICalendarService {
+  +syncCalendar(calendar: VCALENDAR): Result<Boolean>
+  +getEvents(calendar: VCALENDAR, range: DateRange): Result<List<VEVENT>>
+  +getTasks(calendar: VCALENDAR): Result<List<VTODO>>
+}
 
   class CalendarServiceImpl {
     +syncCalendar(calendar: VCALENDAR): Boolean
@@ -54,12 +54,10 @@ package "iCalendar Application Logic" {
 }
 
 interface IParticipationService {
-  +respond(event: VEVENT, user: User, partstat: Enum): Boolean
-  +delegate(event: VEVENT, from: User, to: User): Boolean
-  +invite(event: VEVENT, user: User): Boolean
-  +revoke(event: VEVENT, user: User): Boolean
-  +generateRSVPToken(event: VEVENT, user: User): String
-  +validateRSVPToken(token: String): Boolean
+  +respond(event: VEVENT, user: User, partstat: Enum): Result<Boolean>
+  +delegate(event: VEVENT, from: User, to: User): Result<Boolean>
+  +invite(event: VEVENT, user: User): Result<Boolean>
+  +revoke(event: VEVENT, user: User): Result<Boolean>
 }
 
 class ParticipationServiceImpl {
@@ -67,8 +65,6 @@ class ParticipationServiceImpl {
   +delegate(event: VEVENT, from: User, to: User): Boolean
   +invite(event: VEVENT, user: User): Boolean
   +revoke(event: VEVENT, user: User): Boolean
-  +generateRSVPToken(event: VEVENT, user: User): String
-  +validateRSVPToken(token: String): Boolean
 }
 
 
@@ -107,6 +103,31 @@ class AlarmFactoryImpl {
   +attachToEvent(event: VEVENT, alarm: VALARM): Boolean
   +attachToTask(task: VTODO, alarm: VALARM): Boolean
 }
+
+
+  interface IAttachmentFactory {
+    +createAttachment(data: Map): Attachment
+    +validateAttachment(data: Map): Boolean
+  }
+
+  class AttachmentFactoryImpl {
+    +createAttachment(data: Map): Attachment
+    +validateAttachment(data: Map): Boolean
+  }
+
+  interface IAttachmentService {
+    +uploadAttachment(user: User, data: Binary, meta: Map): Attachment
+    +deleteAttachment(user: User, attachment: Attachment): Boolean
+    +listAttachments(event: VEVENT): List<Attachment>
+    +getAttachment(id: UUID): Attachment
+  }
+
+  class AttachmentServiceImpl {
+    +uploadAttachment(user: User, data: Binary, meta: Map): Attachment
+    +deleteAttachment(user: User, attachment: Attachment): Boolean
+    +listAttachments(event: VEVENT): List<Attachment>
+    +getAttachment(id: UUID): Attachment
+  }
 
 
 interface ICalendarPermissionService {
@@ -161,7 +182,51 @@ class WorkspaceSyncServiceImpl {
   +sync(calendar: VCALENDAR, syncToken: String): Map
   +getQuota(user: User): WebDAVQuota
 }
+interface IEventDuplicationService {
+  +duplicate(event: VEVENT, options: DuplicationOptions): VEVENT
+}
 
+class EventDuplicationServiceImpl {
+  +duplicate(event: VEVENT, options: DuplicationOptions): VEVENT
+}
+interface IICalMapper {
+  +toICalEvent(event: VEVENT): String
+  +toICalTask(task: VTODO): String
+  +toICalCalendar(calendar: VCALENDAR): String
+  +fromICal(data: String): VCALENDAR
+  +fromICalEvent(data: String): VEVENT
+  +fromICalTask(data: String): VTODO
+}
+
+class ICalMapperImpl {
+  +toICalEvent(event: VEVENT): String
+  +toICalTask(task: VTODO): String
+  +toICalCalendar(calendar: VCALENDAR): String
+  +fromICal(data: String): VCALENDAR
+  +fromICalEvent(data: String): VEVENT
+  +fromICalTask(data: String): VTODO
+}
+
+IICalMapper <|.. ICalMapperImpl
+
+ICalMapperImpl --> VCALENDAR
+ICalMapperImpl --> VEVENT
+ICalMapperImpl --> VTODO
+IEventDuplicationService <|.. EventDuplicationServiceImpl
+EventFactoryImpl --> IEventDuplicationService : uses
+EventFactoryImpl --> EventDuplicationServiceImpl : delegates duplication
+EventDuplicationServiceImpl --> VEVENT : clones
+EventDuplicationServiceImpl --> VCALENDAR : target
+EventDuplicationServiceImpl --> Attachment : includes
+EventDuplicationServiceImpl --> EventParticipation : optionally
+EventDuplicationServiceImpl --> VTODO : if linked
+  IAttachmentFactory <|.. AttachmentFactoryImpl
+  IAttachmentService <|.. AttachmentServiceImpl
+
+  AttachmentFactoryImpl --> Attachment
+  AttachmentServiceImpl --> Attachment
+  AttachmentServiceImpl --> VEVENT
+  AttachmentServiceImpl --> User
 IWebDAVResourceService <|.. WebDAVResourceServiceImpl
 
 WebDAVResourceServiceImpl --> WebDAVResource
@@ -189,10 +254,11 @@ class RecurrenceServiceImpl {
 
 
 interface IInvitationFactory {
-  +createInvitation(event: VEVENT, user: User): EventInvitation
-  +expireInvitation(invitation: EventInvitation): Boolean
-  +generateRSVPToken(invitation: EventInvitation): String
-  +validateRSVPToken(token: String): Boolean
+  +createInvitation(event: VEVENT, user: User): Result<EventInvitation>
+  +expireInvitation(invitation: EventInvitation): Result<Boolean>
+  +generateRSVPToken(invitation: EventInvitation): Result<String>
+  +validateRSVPToken(token: String): Result<Boolean>
+  +getInvitationByToken(token: String): Result<EventInvitation>
 }
 
 class InvitationFactoryImpl {
@@ -200,8 +266,79 @@ class InvitationFactoryImpl {
   +expireInvitation(invitation: EventInvitation): Boolean
   +generateRSVPToken(invitation: EventInvitation): String
   +validateRSVPToken(token: String): Boolean
+  +getInvitationByToken(token: String): EventInvitation
+}
+interface IReminderService {
+  +listReminders(user: User): List<VALARM>
+  +createReminder(user: User, data: Map): VALARM
+  +deleteReminder(user: User, alarm: VALARM): Boolean
+  +getUpcomingReminders(user: User, now: DateTime): List<VALARM>
 }
 
+class ReminderServiceImpl {
+  +listReminders(user: User): List<VALARM>
+  +createReminder(user: User, data: Map): VALARM
+  +deleteReminder(user: User, alarm: VALARM): Boolean
+  +getUpcomingReminders(user: User, now: DateTime): List<VALARM>
+}
+interface IAuditService {
+  +log(user: User, action: String, resourcePath: String): Boolean
+  +getLogs(user: User): List<WebDAVAuditLog>
+}
+
+class AuditServiceImpl {
+  +log(user: User, action: String, resourcePath: String): Boolean
+  +getLogs(user: User): List<WebDAVAuditLog>
+}
+interface IDomainValidator {
+  +validateEventData(data: Map): Boolean
+  +validateTaskData(data: Map): Boolean
+  +validateFreeBusyData(data: Map): Boolean
+  +validateAlarmData(data: Map): Boolean
+  +validateInvitation(event: VEVENT, user: User): Boolean
+  +validateUserPermissions(user: User, calendar: VCALENDAR, action: String): Boolean
+}
+
+class DomainValidatorImpl {
+  +validateEventData(data: Map): Boolean
+  +validateTaskData(data: Map): Boolean
+  +validateFreeBusyData(data: Map): Boolean
+  +validateAlarmData(data: Map): Boolean
+  +validateInvitation(event: VEVENT, user: User): Boolean
+  +validateUserPermissions(user: User, calendar: VCALENDAR, action: String): Boolean
+}
+interface IResult<T> {
+  +success: Boolean
+  +data: T
+  +error: ErrorDetail
+}
+
+class Result<T> {
+  +success: Boolean
+  +data: T
+  +error: ErrorDetail
+}
+
+class ErrorDetail {
+  +code: String
+  +message: String
+  +details: Map
+}
+IDomainValidator <|.. DomainValidatorImpl
+
+EventFactoryImpl --> IDomainValidator
+ToDoFactoryImpl --> IDomainValidator
+FreeBusyFactoryImpl --> IDomainValidator
+AlarmFactoryImpl --> IDomainValidator
+InvitationFactoryImpl --> IDomainValidator
+ParticipationServiceImpl --> IDomainValidator
+IAuditService <|.. AuditServiceImpl
+AuditServiceImpl --> WebDAVAuditLog
+AuditServiceImpl --> User
+IReminderService <|.. ReminderServiceImpl
+
+ReminderServiceImpl --> VALARM
+ReminderServiceImpl --> User
 
 interface IWebDAVResourceService
 IInvitationFactory <|.. InvitationFactoryImpl
