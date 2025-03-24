@@ -183,6 +183,20 @@ class CalendarPermission {
   +permission: Enum { VIEW, EDIT, ADMIN }
   +inherited: Boolean
 }
+class EventInvitation {
+  +id: UUID
+  +event: VEVENT
+  +user: User
+  +guest_user: User
+  +status: Enum { PENDING, ACCEPTED, DECLINED }
+  +expires_at: DateTime
+  +rsvp_token: String
+}
+
+VEVENT --> "0..*" EventInvitation : invites
+EventInvitation --> User : user
+EventInvitation --> User : guest_user
+
 VCALENDAR --> "0..*" CalendarPermission
 CalendarPermission --> User
 VCALENDAR --> "0..*" CalendarPermission

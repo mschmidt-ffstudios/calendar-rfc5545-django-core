@@ -51,27 +51,211 @@ package "iCalendar Application Logic" {
     +getTasks(calendar: VCALENDAR): List<VTODO>
   }
 
-  interface IParticipationService {
-    +respond(event: VEVENT, user: User, partstat: Enum): Boolean
-    +delegate(event: VEVENT, from: User, to: User): Boolean
-  }
+}
 
-  class ParticipationServiceImpl {
-    +respond(event: VEVENT, user: User, partstat: Enum): Boolean
-    +delegate(event: VEVENT, from: User, to: User): Boolean
-  }
+interface IParticipationService {
+  +respond(event: VEVENT, user: User, partstat: Enum): Boolean
+  +delegate(event: VEVENT, from: User, to: User): Boolean
+  +invite(event: VEVENT, user: User): Boolean
+  +revoke(event: VEVENT, user: User): Boolean
+  +generateRSVPToken(event: VEVENT, user: User): String
+  +validateRSVPToken(token: String): Boolean
+}
 
-  ICalendarFactory <|.. CalendarFactoryImpl
-  IEventFactory <|.. EventFactoryImpl
-  IToDoFactory <|.. ToDoFactoryImpl
-  ICalendarService <|.. CalendarServiceImpl
-  IParticipationService <|.. ParticipationServiceImpl
+class ParticipationServiceImpl {
+  +respond(event: VEVENT, user: User, partstat: Enum): Boolean
+  +delegate(event: VEVENT, from: User, to: User): Boolean
+  +invite(event: VEVENT, user: User): Boolean
+  +revoke(event: VEVENT, user: User): Boolean
+  +generateRSVPToken(event: VEVENT, user: User): String
+  +validateRSVPToken(token: String): Boolean
+}
 
-  CalendarFactoryImpl --> VCALENDAR
-  EventFactoryImpl --> VEVENT
-  ToDoFactoryImpl --> VTODO
-  CalendarServiceImpl --> VCALENDAR
-  ParticipationServiceImpl --> EventParticipation
+
+
+interface IFreeBusyFactory {
+  +createFreeBusy(calendar: VCALENDAR, user: User, range: DateRange): VFREEBUSY
+  +validateFreeBusy(data: Map): Boolean
+}
+
+class FreeBusyFactoryImpl {
+  +createFreeBusy(calendar: VCALENDAR, user: User, range: DateRange): VFREEBUSY
+  +validateFreeBusy(data: Map): Boolean
+}
+
+interface ITimezoneFactory {
+  +createTimezone(tzid: String, standard: STANDARD, daylight: DAYLIGHT): VTIMEZONE
+  +importFromICal(data: String): VTIMEZONE
+}
+
+class TimezoneFactoryImpl {
+  +createTimezone(tzid: String, standard: STANDARD, daylight: DAYLIGHT): VTIMEZONE
+  +importFromICal(data: String): VTIMEZONE
+}
+
+
+interface IAlarmFactory {
+  +createAlarm(data: Map): VALARM
+  +validateAlarm(data: Map): Boolean
+  +attachToEvent(event: VEVENT, alarm: VALARM): Boolean
+  +attachToTask(task: VTODO, alarm: VALARM): Boolean
+}
+
+class AlarmFactoryImpl {
+  +createAlarm(data: Map): VALARM
+  +validateAlarm(data: Map): Boolean
+  +attachToEvent(event: VEVENT, alarm: VALARM): Boolean
+  +attachToTask(task: VTODO, alarm: VALARM): Boolean
+}
+
+
+interface ICalendarPermissionService {
+  +grantPermission(calendar: VCALENDAR, user: User, permission: Enum): Boolean
+  +revokePermission(calendar: VCALENDAR, user: User): Boolean
+  +getPermissions(calendar: VCALENDAR): List<CalendarPermission>
+  +hasAccess(user: User, calendar: VCALENDAR, required: Enum): Boolean
+}
+
+class CalendarPermissionServiceImpl {
+  +grantPermission(calendar: VCALENDAR, user: User, permission: Enum): Boolean
+  +revokePermission(calendar: VCALENDAR, user: User): Boolean
+  +getPermissions(calendar: VCALENDAR): List<CalendarPermission>
+  +hasAccess(user: User, calendar: VCALENDAR, required: Enum): Boolean
+}
+
+interface ICalendarSharingService {
+  +shareCalendar(calendar: VCALENDAR, withUser: User, permission: Enum): Boolean
+  +revokeShare(calendar: VCALENDAR, fromUser: User): Boolean
+  +getSharedUsers(calendar: VCALENDAR): List<CalendarShare>
+}
+
+class CalendarSharingServiceImpl {
+  +shareCalendar(calendar: VCALENDAR, withUser: User, permission: Enum): Boolean
+  +revokeShare(calendar: VCALENDAR, fromUser: User): Boolean
+  +getSharedUsers(calendar: VCALENDAR): List<CalendarShare>
+}
+
+interface IWorkspaceSyncService {
+  +syncWorkspaceCalendars(workspace: Workspace): Boolean
+  +syncTasksWithEvents(workspace: Workspace): Boolean
+  +getSyncStatus(workspace: Workspace): String
+  +createResource(path: String, type: Enum, owner: User): WebDAVResource
+  +propfind(path: String): Map
+  +proppatch(path: String, properties: Map): Boolean
+  +lock(resource: WebDAVResource, user: User): WebDAVLock
+  +unlock(lockToken: String): Boolean
+  +sync(calendar: VCALENDAR, syncToken: String): Map
+  +getQuota(user: User): WebDAVQuota
+}
+
+
+class WorkspaceSyncServiceImpl {
+  +syncWorkspaceCalendars(workspace: Workspace): Boolean
+  +syncTasksWithEvents(workspace: Workspace): Boolean
+  +getSyncStatus(workspace: Workspace): String
+  +createResource(path: String, type: Enum, owner: User): WebDAVResource
+  +propfind(path: String): Map
+  +proppatch(path: String, properties: Map): Boolean
+  +lock(resource: WebDAVResource, user: User): WebDAVLock
+  +unlock(lockToken: String): Boolean
+  +sync(calendar: VCALENDAR, syncToken: String): Map
+  +getQuota(user: User): WebDAVQuota
+}
+
+IWebDAVResourceService <|.. WebDAVResourceServiceImpl
+
+WebDAVResourceServiceImpl --> WebDAVResource
+WebDAVResourceServiceImpl --> WebDAVProperty
+WebDAVResourceServiceImpl --> WebDAVLock
+WebDAVResourceServiceImpl --> WebDAVQuota
+WebDAVResourceServiceImpl --> WebDAVReport
+WebDAVResourceServiceImpl --> WebDAVAuditLog
+WebDAVResourceServiceImpl --> User
+WebDAVResourceServiceImpl --> VCALENDAR
+
+interface IRecurrenceService {
+  +expandOccurrences(event: VEVENT, range: DateRange): List<VEVENT>
+  +expandTaskOccurrences(task: VTODO, range: DateRange): List<VTODO>
+  +validateRule(rrule: String): Boolean
+  +getNextOccurrence(rrule: String, from: DateTime): DateTime
+}
+
+class RecurrenceServiceImpl {
+  +expandOccurrences(event: VEVENT, range: DateRange): List<VEVENT>
+  +expandTaskOccurrences(task: VTODO, range: DateRange): List<VTODO>
+  +validateRule(rrule: String): Boolean
+  +getNextOccurrence(rrule: String, from: DateTime): DateTime
+}
+
+
+interface IInvitationFactory {
+  +createInvitation(event: VEVENT, user: User): EventInvitation
+  +expireInvitation(invitation: EventInvitation): Boolean
+  +generateRSVPToken(invitation: EventInvitation): String
+  +validateRSVPToken(token: String): Boolean
+}
+
+class InvitationFactoryImpl {
+  +createInvitation(event: VEVENT, user: User): EventInvitation
+  +expireInvitation(invitation: EventInvitation): Boolean
+  +generateRSVPToken(invitation: EventInvitation): String
+  +validateRSVPToken(token: String): Boolean
+}
+
+
+interface IWebDAVResourceService
+IInvitationFactory <|.. InvitationFactoryImpl
+InvitationFactoryImpl --> EventInvitation
+InvitationFactoryImpl --> VEVENT
+InvitationFactoryImpl --> User
+
+IRecurrenceService <|.. RecurrenceServiceImpl
+
+RecurrenceServiceImpl --> VEVENT : expand
+RecurrenceServiceImpl --> VTODO : expand
+IWorkspaceSyncService <|.. WorkspaceSyncServiceImpl
+WorkspaceSyncServiceImpl --> Workspace
+WorkspaceSyncServiceImpl --> VCALENDAR
+WorkspaceSyncServiceImpl --> VTODO
+WorkspaceSyncServiceImpl --> VEVENT
+
+IAlarmFactory <|.. AlarmFactoryImpl
+
+AlarmFactoryImpl --> VALARM
+AlarmFactoryImpl --> VEVENT : attachToEvent
+AlarmFactoryImpl --> VTODO : attachToTask
+
+ICalendarPermissionService <|.. CalendarPermissionServiceImpl
+CalendarPermissionServiceImpl --> VCALENDAR
+CalendarPermissionServiceImpl --> CalendarPermission
+CalendarPermissionServiceImpl --> User
+
+ICalendarSharingService <|.. CalendarSharingServiceImpl
+CalendarSharingServiceImpl --> VCALENDAR
+CalendarSharingServiceImpl --> CalendarShare
+CalendarSharingServiceImpl --> User
+
+ITimezoneFactory <|.. TimezoneFactoryImpl
+TimezoneFactoryImpl --> VTIMEZONE
+TimezoneFactoryImpl --> STANDARD
+TimezoneFactoryImpl --> DAYLIGHT
+
+IFreeBusyFactory <|.. FreeBusyFactoryImpl
+FreeBusyFactoryImpl --> VFREEBUSY
+
+ICalendarFactory <|.. CalendarFactoryImpl
+IEventFactory <|.. EventFactoryImpl
+IToDoFactory <|.. ToDoFactoryImpl
+ICalendarService <|.. CalendarServiceImpl
+IParticipationService <|.. ParticipationServiceImpl
+ParticipationServiceImpl --> EventParticipation : manages
+ParticipationServiceImpl --> VEVENT : modifies
+ParticipationServiceImpl --> User : invites
+
+CalendarFactoryImpl --> VCALENDAR
+EventFactoryImpl --> VEVENT
+ToDoFactoryImpl --> VTODO
+CalendarServiceImpl --> VCALENDAR
 
 }
 @enduml
