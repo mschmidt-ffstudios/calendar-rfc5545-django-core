@@ -9,38 +9,58 @@ package "iCalendar - RFC 5545" {
       +CALSCALE: Text
       +METHOD: Text
       +owner: User
+      +name: String         ' X-WR-CALNAME
+      +description: String  ' X-WR-CALDESC
+      +color: String        ' X-APPLE-CALENDAR-COLOR
     }
+      class CalendarPermission {
+    +calendar: VCALENDAR
+    +user: User
+    +permission: Enum { VIEW, EDIT, ADMIN }
+    +inherited: Boolean
+  }
+    class CalendarShare {
+    + calendar: VCALENDAR
+    + shared_with: User
+    + permission: Enum { VIEW, EDIT }
   }
 
-package "VEVENT" {
-  class VEVENT {
-    +UID: Text
-    +SUMMARY: Text
-    +DESCRIPTION: Text
-    +DTSTART: DateTime
-    +DTEND: DateTime
-    +DTSTAMP: DateTime
-    +CREATED: DateTime
-    +SEQUENCE: Integer
-    +STATUS: Enum
-    +TRANSP: Enum
-    +CLASS: Enum
-    +EXDATE: Date[]
-    +RDATE: Date[]
-    +RRULE: Recur
-    +EXRULE: Recur
-    +ORGANIZER: URI
-    +LOCATION: Text
-    +CATEGORIES: Text[]
-    +RELATED_TO: UID
-    +RELTYPE: Enum  # {PARENT, CHILD, SIBLING}
-    +GEO: Geo
-    +URL: URI
-    +REQUEST_STATUS: Text
-    +owner: User
-    +TZID: Text
-    +ETAG: Text
   }
+  class LocalizedText {
+    +text: String
+    +language: String  ' RFC5646 language tag (e.g., "en-US", "de", "fr-FR")
+  }
+  package "VEVENT" {
+    class VEVENT {
+      +UID: Text
+      +SUMMARY: LocalizedText
+      +DESCRIPTION: LocalizedText
+      +DTSTART: DateTime
+      +DTEND: DateTime
+      +DTSTAMP: DateTime
+      +CREATED: DateTime
+      +SEQUENCE: Integer
+      +STATUS: Enum
+      +TRANSP: Enum
+      +CLASS: Enum
+      +EXDATE: Date[]
+      +RDATE: Date[]
+      +RRULE: Recur
+      +EXRULE: Recur
+      +ORGANIZER: URI
+      +LOCATION: LocalizedText
+      +CATEGORIES: Text[]
+      +RELATED_TO: UID
+      +RELTYPE: Enum  # {PARENT, CHILD, SIBLING}
+      +GEO: Geo
+      +URL: URI
+      +REQUEST_STATUS: Text
+      +owner: User
+      +RECURRENCE_ID: DateTime
+      +RECURRENCE_RANGE: Enum { THIS, THISANDFUTURE }
+      +TZID: Text
+      +ETAG: Text
+    }
 
     class EventParticipation {
       +UID: Text
@@ -54,19 +74,33 @@ package "VEVENT" {
       +DELEGATED_FROM: URI
       +SENT_BY: URI
     }
-
+    class EventInvitation {
+      +id: UUID
+      +event: VEVENT
+      +invited_by: User
+      +invitee_contact: AddressBookContact
+      +recurrence_id: DateTime
+      +status: Enum { PENDING, ACCEPTED, DECLINED }
+      +expires_at: DateTime
+      +rsvp_token: String
+      +created_at: DateTime
+      +responded_at: DateTime
+      +sent_at: DateTime
+    }
     VEVENT --> "0..*" EventParticipation : has
-    VEVENT --> GeoLocation
+    VEVENT --> GEO
     VEVENT --> "*" Attachment
     VEVENT --> "*" Category
     VEVENT --> "0..*" VALARM
     EventParticipation --> User
 
-}
-class GeoLocation {
-  + Float latitude
-  + Float longitude
-}
+  }
+
+
+  class GEO {
+    + Float latitude
+    + Float longitude
+  }
   class Attachment {
     +id: UUID
     +type: Enum { URI, INLINE }
@@ -79,11 +113,11 @@ class GeoLocation {
     +name: Text
   }
 
-package "VTODO" {
+  package "VTODO" {
     class VTODO {
       +UID: Text
-      +SUMMARY: Text
-      +DESCRIPTION: Text
+      +SUMMARY: LocalizedText
+      +DESCRIPTION: LocalizedText
       +DTSTART: DateTime
       +DUE: DateTime
       +DURATION: Duration
@@ -97,15 +131,23 @@ package "VTODO" {
       +PRIORITY: Integer
       +RELATED_TO: UID
       +ASSIGNEE: URI
+      +RECURRENCE_ID: DateTime  ' Identifies instance in recurring set
+      +RECURRENCE_RANGE: Enum { THIS, THISANDFUTURE }  ' RFC 5545 RANGE param
       +TZID: Text
       +ETAG: Text
     }
 
-    VTODO --> GeoLocation
-    VTODO --> "*" Attachment
-    VTODO --> "0..*" VALARM
+
   }
 
+  class Workspace {
+    +id: UUID
+    +name: String
+    +description: Text
+    +created_at: DateTime
+    +updated_at: DateTime
+    +owner: User
+  }
   package "VFREEBUSY" {
     class VFREEBUSY {
       +UID: Text
@@ -117,18 +159,20 @@ package "VTODO" {
       +COMMENT: Text
       +TZID: Text
       +ETAG: Text
-      +owner: User 
+      +owner: User
     }
+      class Period {
+    +start: DateTime
+    +end: DateTime
+  }
   }
 
-class Category {
-  +name: Text
-}
   package "VTIMEZONE" {
     class VTIMEZONE {
       +TZID: Text
       +LAST_MODIFIED: DateTime
       +TZURL: URI
+      +TZID_ALIAS_OF: Text  ' RFC 7808 alias for another timezone ID
     }
 
     class STANDARD {
@@ -162,57 +206,78 @@ class Category {
     }
   }
 
-  class CalendarShare {
-  + calendar: VCALENDAR
-  + shared_with: User
-  + permission: Enum { VIEW, EDIT }
-}
+  package "VCARD"{
+    class AddressBookContact {
+      +id: UUID
+      +fn: String              ' Full Name
+      +n: String               ' Name (structured)
+      +email: String
+      +tel: String
+      +adr: Address
+      +org: String
+      +photo: URI
+      +kind: Enum { individual, group, org, location }
+      +note: Text
+      +user: User              ' Owner
+    }
+    class AddressBookGroup {
+      +id: UUID
+      +name: String
+      +members: List<AddressBookContact>
+      +user: User
+    }
+    class Address {
+      +street: String
+      +locality: String
+      +region: String
+      +postal_code: String
+      +country: String
+    }
+  }
 
-class Workspace {
-  +id: UUID
-  +name: String
-  +description: Text
-  +created_at: DateTime
-  +updated_at: DateTime
-  +owner: User
-}
 
-class CalendarPermission {
-  +calendar: VCALENDAR
-  +user: User
-  +permission: Enum { VIEW, EDIT, ADMIN }
-  +inherited: Boolean
-}
-class EventInvitation {
-  +id: UUID
-  +event: VEVENT
-  +user: User
-  +guest_user: User
-  +status: Enum { PENDING, ACCEPTED, DECLINED }
-  +expires_at: DateTime
-  +rsvp_token: String
-}
 
-VEVENT --> "0..*" EventInvitation : invites
-EventInvitation --> User : user
-EventInvitation --> User : guest_user
 
-VCALENDAR --> "0..*" CalendarPermission
-CalendarPermission --> User
-VCALENDAR --> "0..*" CalendarPermission
-VCALENDAR --> Workspace : in
-VCALENDAR --> "0..*" CalendarShare
-CalendarShare --> User : shared_with
+
+  class XProperty {
+    +key: String
+    +value: String
+    +component: String  ' e.g., VEVENT, VTODO
+  }
+      VTODO --> GEO
+    VTODO --> "*" Attachment
+    VTODO --> "0..*" VALARM
+  VEVENT --> LocalizedText
+  VTODO --> LocalizedText
+
+  VCALENDAR --> "*" XProperty
+  VEVENT --> "*" XProperty
+  VTODO --> "*" XProperty
+  EventInvitation --> EventParticipation : optional_participation
+  EventParticipation --> AddressBookContact : attendee_info
+  VCALENDAR --> "*" AddressBookContact : used_contacts
+  User --> "*" AddressBookContact : owns
+  VEVENT --> "0..*" EventInvitation : invites
+  EventInvitation --> User : user
+  EventInvitation --> User : guest_user
+
+  VCALENDAR --> "0..*" CalendarPermission
+  CalendarPermission --> User
+  VCALENDAR --> "0..*" CalendarPermission
+  VCALENDAR --> Workspace : in
+  VCALENDAR --> "0..*" CalendarShare
+  CalendarShare --> User : shared_with
 
   VCALENDAR --> VEVENT
   VCALENDAR --> VTODO
   VCALENDAR --> VFREEBUSY
   VCALENDAR --> VTIMEZONE
   VEVENT --> VCALENDAR : belongs_to
-VTODO --> VCALENDAR : belongs_to
-VFREEBUSY --> VCALENDAR : belongs_to
+  VTODO --> VCALENDAR : belongs_to
+  VFREEBUSY --> VCALENDAR : belongs_to
 
-VCALENDAR --> Workspace
-VEVENT --> Workspace
-VTODO --> Workspace
-VFREEBUSY --> Workspace
+  VCALENDAR --> Workspace
+  VEVENT --> Workspace
+  VTODO --> "0..*" Workspace
+}
+@endpuml
