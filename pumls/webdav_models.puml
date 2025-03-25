@@ -1,0 +1,58 @@
+@startuml webdav_models
+
+package "WebDAV Models" {
+
+  class WebDAVResource {
+    +path: string
+    +is_collection: boolean
+    +etag: string
+    +content_type: string
+    +content_length: int
+    +last_modified: datetime
+  }
+
+  class WebDAVProperty {
+    +name: string
+    +namespace: string
+    +value: string
+    +is_protected: boolean
+  }
+
+  class WebDAVLock {
+    +token: string
+    +scope: string
+    +type: string
+    +depth: string
+    +owner: string
+    +timeout: int
+    +created_at: datetime
+  }
+  class WebDAVAccessLog {
+    +timestamp: datetime
+    +path: string
+    +user: string
+    +action: string
+  }
+  class WebDAVAuditLog {
+    +resource_path: string
+    +user: string
+    +action: string
+    +timestamp: datetime
+  }
+
+  class WebDAVQuota {
+    +user: string
+    +quota_limit: int
+    +quota_used: int
+  }
+  WebDAVResource --> "*" WebDAVProperty : has
+  WebDAVResource --> "*" WebDAVLock : locked_by
+  WebDAVResource --> "*" WebDAVAccessLog : access_logs
+
+  WebDAVResource --> "*" WebDAVProperty : has
+  WebDAVResource --> "*" WebDAVLock : locked_by
+  WebDAVResource --> "*" WebDAVAuditLog : logged
+  WebDAVResource --> WebDAVQuota : applies_to
+}
+
+@enduml

@@ -1,4 +1,5 @@
 @startuml RFC5545_ICALENDAR
+top to bottom direction
 
 package "iCalendar - RFC 5545" {
 
@@ -13,23 +14,24 @@ package "iCalendar - RFC 5545" {
       +description: String  ' X-WR-CALDESC
       +color: String        ' X-APPLE-CALENDAR-COLOR
     }
-      class CalendarPermission {
-    +calendar: VCALENDAR
-    +user: User
-    +permission: Enum { VIEW, EDIT, ADMIN }
-    +inherited: Boolean
-  }
+    class CalendarPermission {
+      +calendar: VCALENDAR
+      +user: User
+      +permission: Enum { VIEW, EDIT, ADMIN }
+      +inherited: Boolean
+    }
     class CalendarShare {
-    + calendar: VCALENDAR
-    + shared_with: User
-    + permission: Enum { VIEW, EDIT }
+      + calendar: VCALENDAR
+      + shared_with: User
+      + permission: Enum { VIEW, EDIT }
+    }
   }
 
-  }
   class LocalizedText {
     +text: String
     +language: String  ' RFC5646 language tag (e.g., "en-US", "de", "fr-FR")
   }
+
   package "VEVENT" {
     class VEVENT {
       +UID: Text
@@ -93,14 +95,13 @@ package "iCalendar - RFC 5545" {
     VEVENT --> "*" Category
     VEVENT --> "0..*" VALARM
     EventParticipation --> User
-
   }
-
 
   class GEO {
     + Float latitude
     + Float longitude
   }
+
   class Attachment {
     +id: UUID
     +type: Enum { URI, INLINE }
@@ -109,6 +110,7 @@ package "iCalendar - RFC 5545" {
     +data: Binary
     +title: String
   }
+
   class Category {
     +name: Text
   }
@@ -136,8 +138,6 @@ package "iCalendar - RFC 5545" {
       +TZID: Text
       +ETAG: Text
     }
-
-
   }
 
   class Workspace {
@@ -148,6 +148,7 @@ package "iCalendar - RFC 5545" {
     +updated_at: DateTime
     +owner: User
   }
+
   package "VFREEBUSY" {
     class VFREEBUSY {
       +UID: Text
@@ -161,10 +162,10 @@ package "iCalendar - RFC 5545" {
       +ETAG: Text
       +owner: User
     }
-      class Period {
-    +start: DateTime
-    +end: DateTime
-  }
+    class Period {
+      +start: DateTime
+      +end: DateTime
+    }
   }
 
   package "VTIMEZONE" {
@@ -220,12 +221,14 @@ package "iCalendar - RFC 5545" {
       +note: Text
       +user: User              ' Owner
     }
+
     class AddressBookGroup {
       +id: UUID
       +name: String
       +members: List<AddressBookContact>
       +user: User
     }
+
     class Address {
       +street: String
       +locality: String
@@ -235,18 +238,15 @@ package "iCalendar - RFC 5545" {
     }
   }
 
-
-
-
-
   class XProperty {
     +key: String
     +value: String
     +component: String  ' e.g., VEVENT, VTODO
   }
-      VTODO --> GEO
-    VTODO --> "*" Attachment
-    VTODO --> "0..*" VALARM
+  
+  VTODO --> GEO
+  VTODO --> "*" Attachment
+  VTODO --> "0..*" VALARM
   VEVENT --> LocalizedText
   VTODO --> LocalizedText
 

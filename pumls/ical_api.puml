@@ -1,4 +1,5 @@
 @startuml calendar_api_views
+top to bottom direction
 
 
 package "API Views & URL Routing" {
@@ -107,15 +108,25 @@ package "API Views & URL Routing" {
   ' Controller -> Logic Layer
   CalendarController --> CalendarFactoryImpl
   CalendarController --> CalendarServiceImpl
+  CalendarController --> ICalendarPermissionService
+  CalendarController --> ICalendarSharingService
+
   EventController --> EventFactoryImpl
   EventController --> ParticipationServiceImpl
-  ReminderController --> VALARM
-  InvitationController --> EventParticipation
-  FreeBusyController --> VFREEBUSY
-  WorkspaceController --> Workspace
-  WebDAVController --> VEVENT
-  WebDAVController --> VTODO
-  WebDAVController --> VCALENDAR
+  EventController --> AttachmentServiceImpl
+  EventController --> RecurrenceServiceImpl
+  EventController --> IEventDuplicationService
+
+  ReminderController --> ReminderServiceImpl
+
+  InvitationController --> InvitationFactoryImpl
+
+  FreeBusyController --> FreeBusyFactoryImpl
+
+  WorkspaceController --> WorkspaceSyncServiceImpl
+
+  WebDAVController --> WebDAVResourceServiceImpl
+
 
 }
 

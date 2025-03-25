@@ -1,0 +1,27 @@
+@startuml webdav_logic
+
+interface IWebDAVResourceService {
+  +getResource(path: string): WebDAVResource
+  +getProperties(path: string): List<WebDAVProperty>
+  +setProperty(path: string, prop: WebDAVProperty): void
+  +removeProperty(path: string, propName: string): void
+  +lockResource(path: string, owner: string, scope: string): WebDAVLock
+  +unlockResource(path: string, token: string): void
+  +listChildren(path: string): List<WebDAVResource>
+  +logAccess(path: string, user: string, action: string): void
+}
+
+class WebDAVResourceServiceImpl {
+  +getResource(path: string): WebDAVResource
+  +getProperties(path: string): List<WebDAVProperty>
+  +setProperty(path: string, prop: WebDAVProperty): void
+  +removeProperty(path: string, propName: string): void
+  +lockResource(path: string, owner: string, scope: string): WebDAVLock
+  +unlockResource(path: string, token: string): void
+  +listChildren(path: string): List<WebDAVResource>
+  +logAccess(path: string, user: string, action: string): void
+}
+
+IWebDAVResourceService <|.. WebDAVResourceServiceImpl
+
+@enduml
